@@ -1,5 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
-import { Building2, Calendar } from 'lucide-react';
+import { Building2, Calendar, Trash2 } from 'lucide-react';
 import DetailViewModal from './DetailViewModal';
 import { useState } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -7,9 +7,10 @@ import { useDarkMode } from '../hooks/useDarkMode';
 interface CardProps {
   application: any;
   index: number;
+  onDelete: () => void;
 }
 
-export default function Card({ application, index }: CardProps) {
+export default function Card({ application, index, onDelete }: CardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { isDark } = useDarkMode();
   const dark = isDark;
@@ -54,6 +55,19 @@ export default function Card({ application, index }: CardProps) {
                 <Calendar className="w-3 h-3" />
                 <span>{new Date(application.dateApplied).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </div>
+              
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Are you sure you want to delete this application?')) {
+                    onDelete();
+                  }
+                }}
+                className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500/10 text-rose-500 h-7 w-7 flex items-center justify-center`}
+                title="Delete application"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}

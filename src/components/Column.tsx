@@ -13,9 +13,10 @@ interface ColumnProps {
   onAddBefore: () => void;
   onDelete: () => void;
   onUpdate: (updates: Partial<{ name: string; color: string }>) => void;
+  onDeleteTask: (id: string) => void;
 }
 
-export default function Column({ id, title, applications, color, index, onAddBefore, onDelete, onUpdate }: ColumnProps) {
+export default function Column({ id, title, applications, color, index, onAddBefore, onDelete, onUpdate, onDeleteTask }: ColumnProps) {
   const { isDark } = useDarkMode();
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -155,7 +156,7 @@ export default function Column({ id, title, applications, color, index, onAddBef
             }`}
           >
             {applications.map((app, index) => (
-              <Card key={app._id} application={app} index={index} />
+              <Card key={app._id} application={app} index={index} onDelete={() => onDeleteTask(app._id)} />
             ))}
             {provided.placeholder}
             

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getApplications, updateApplication, getProfile, updateProfile } from '../api';
+import { getApplications, updateApplication, getProfile, updateProfile, deleteApplication } from '../api';
 import Column from './Column';
 import AddApplicationModal from './AddApplicationModal';
 import { Loader2 } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function KanbanBoard() {
 
   const updateAppMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateApplication(id, { status }),
-    onMutate: async ({ id, status }) => {
+    onMutate: async () => {
       // Cancel refetches
       await queryClient.cancelQueries({ queryKey: ['applications'] });
       
@@ -52,13 +52,40 @@ export default function KanbanBoard() {
 
       return { previousApps };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback
       if (context?.previousApps) {
         queryClient.setQueryData(['applications'], context.previousApps);
         setLocalData(context.previousApps as any[]);
       }
       toast.error('Sync failed. Reverting changes.');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+    },
+  });
+
+  const deleteAppMutation = useMutation({
+    mutationFn: deleteApplication,
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ['applications'] });
+      const previousApps = queryClient.getQueryData(['applications']);
+      
+      const newApps = (previousApps as any[]).filter(app => app._id !== id);
+      queryClient.setQueryData(['applications'], newApps);
+      setLocalData(newApps);
+      
+      return { previousApps };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousApps) {
+        queryClient.setQueryData(['applications'], context.previousApps);
+        setLocalData(context.previousApps as any[]);
+      }
+      toast.error('Failed to delete application.');
+    },
+    onSuccess: () => {
+      toast.success('Application removed');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
@@ -217,6 +244,7 @@ export default function KanbanBoard() {
               onAddBefore={() => handleAddBefore(idx)}
               onDelete={() => handleDeleteColumn(idx)}
               onUpdate={(updates) => handleUpdateColumn(idx, updates)}
+              onDeleteTask={(id) => deleteAppMutation.mutate(id)}
             />
           ))}
         </div>

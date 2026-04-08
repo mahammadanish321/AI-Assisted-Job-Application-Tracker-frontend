@@ -111,6 +111,10 @@ export const updateApplication = async (id: string, updateData: any) => {
   const { data } = await api.put(`/applications/${id}`, updateData);
   return data;
 };
+export const deleteApplication = async (id: string) => {
+  const { data } = await api.delete(`/applications/${id}`);
+  return data;
+};
 export const parseJobDescription = async (jdText: string) => {
   const { data } = await api.post('/applications/parse', { jdText });
   return data;
