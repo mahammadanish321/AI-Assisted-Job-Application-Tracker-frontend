@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Building2, Calendar, Check, Copy, Wand2, Loader2, Sparkles } from 'lucide-react';
-import axios from 'axios';
+import { api } from '../api';
 import { useDarkMode } from '../hooks/useDarkMode';
 
 interface DetailViewModalProps {
@@ -18,15 +18,9 @@ export default function DetailViewModal({ application, onClose }: DetailViewModa
   const handleGenerateBullets = async () => {
     setIsGenerating(true);
     try {
-      const userInfoStr = localStorage.getItem('userInfo');
-      const token = userInfoStr ? JSON.parse(userInfoStr).accessToken : '';
-      
-      const { data } = await axios.post('http://localhost:5000/api/applications/generate-resume', {
+      const { data } = await api.post('/applications/generate-resume', {
         jdText: application.jdLink || application.role,
         userExperience: experienceInput
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
       });
       setBullets(data.bullets);
     } catch (err) {

@@ -1,10 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProfile, updateProfile, addResume, deleteResume } from '../api';
+import { api, getProfile, updateProfile, addResume, deleteResume } from '../api';
 import { User, Globe, Trash2, FileText, Loader2, Save, Upload, LogOut, ExternalLink, Share2, Camera, X } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -79,7 +78,7 @@ export default function Profile() {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/api/auth/logout', {}, { withCredentials: true });
+      await api.post('/auth/logout');
     } catch(err) { console.error(err); }
     localStorage.removeItem('userInfo');
     toast.success('Logged out successfully.');
@@ -108,6 +107,7 @@ export default function Profile() {
     };
     reader.readAsDataURL(file);
   }, []);
+
 
   const { getRootProps: getResumeRootProps, getInputProps: getResumeInputProps, isDragActive: isResumeDragActive } = useDropzone({
     onDrop: onResumeDrop,

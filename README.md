@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# AI-Assisted Job Application Tracker (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, high-performance Kanban board for tracking job applications, powered by AI to help you tailor your resume and manage your career search efficiently.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dynamic Kanban Board**: Visualize your application funnel from "Applied" to "Interviewing" and "Offers".
+- **AI Resume Co-pilot**: Generate tailored bullet points for your resume based on job descriptions (driven by OpenAI/Mistral).
+- **Google OAuth Integration**: Secure and seamless login experience.
+- **Micro-interactions & Glassmorphism**: Premium dark/light mode UI with smooth animations.
+- **Gmail Sync**: (In Development) Automatically pull application updates from your inbox.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **State Management**: [TanStack Query (React Query) v5](https://tanstack.com/query/latest)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
 
-## Expanding the ESLint configuration
+## 📦 Deployment to Vercel
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The project is pre-configured with `vercel.json` for optimal performance.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 1. Environment Variables
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Ensure you add the following environment variables in your Vercel Project Settings:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Variable | Description | Example |
+| :--- | :--- | :--- |
+| `VITE_GOOGLE_CLIENT_ID` | Your Google Cloud Console Client ID | `your-id.apps.googleusercontent.com` |
+| `VITE_API_BASE_URL` | The URL of your deployed backend | `https://your-backend.onrender.com/api` |
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Deployment Steps
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Push your code to a GitHub/GitLab/Bitbucket repository.
+2. Import the project into Vercel.
+3. Vercel will auto-detect the Vite framework.
+4. Add the environment variables listed above.
+5. Click **Deploy**.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 💻 Local Development
+
+1. Clone the repository.
+2. Run `npm install`.
+3. Create a `.env` file based on `.env.example`.
+4. Run `npm run dev`.
+5. Open `http://localhost:5173`.
+
+---
+
+Built with ❤️ for better career management.
