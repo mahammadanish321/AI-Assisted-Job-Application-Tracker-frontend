@@ -147,12 +147,6 @@ export default function KanbanBoard() {
     toast.success('Stage added');
   };
 
-  const handleAddAfter = (index: number) => {
-    const newCols = [...columns];
-    newCols.splice(index + 1, 0, { name: `Stage ${columns.length + 1}`, color: '#6366f1' });
-    syncBoard(newCols);
-    toast.success('Stage added');
-  };
 
   const handleDeleteColumn = async (index: number) => {
     if (columns.length <= 1) {
