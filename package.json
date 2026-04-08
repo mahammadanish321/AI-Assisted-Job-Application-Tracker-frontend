@@ -28,13 +28,13 @@
     "tailwind-merge": "^3.5.0",
     "vite": "^8.0.4",
     "@vitejs/plugin-react": "^6.0.1",
-    "typescript": "~6.0.2"
+    "typescript": "~6.0.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/node": "^24.12.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@types/node": "^24.12.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
