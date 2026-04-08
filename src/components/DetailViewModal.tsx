@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Building2, Calendar, Check, Copy, Wand2, Loader2, Sparkles } from 'lucide-react';
-import { api } from '../api';
 import { useDarkMode } from '../hooks/useDarkMode';
+import toast from 'react-hot-toast';
 
 interface DetailViewModalProps {
   application: any;
@@ -16,16 +16,66 @@ export default function DetailViewModal({ application, onClose }: DetailViewModa
   const [experienceInput, setExperienceInput] = useState("Experienced software engineer with full-stack capabilities.");
 
   const handleGenerateBullets = async () => {
+    setBullets([]);
     setIsGenerating(true);
+    
     try {
-      const { data } = await api.post('/applications/generate-resume', {
+      const userInfoStr = localStorage.getItem('userInfo');
+      const token = userInfoStr ? JSON.parse(userInfoStr).accessToken : '';
+      
+      const params = new URLSearchParams({
         jdText: application.jdLink || application.role,
         userExperience: experienceInput
       });
-      setBullets(data.bullets);
+      
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const url = `${baseUrl}/applications/stream-resume?${params.toString()}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to start stream');
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) return;
+
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') break;
+            
+            try {
+              const { bullet, error } = JSON.parse(dataStr);
+              if (error) throw new Error(error);
+              if (bullet) {
+                setBullets(prev => {
+                  if (prev.includes(bullet)) return prev;
+                  return [...prev, bullet];
+                });
+              }
+            } catch (e) {
+              console.error('Partial data error', e);
+            }
+          }
+        }
+      }
     } catch (err) {
       console.error(err);
-      alert('Failed to generate bullets. Please ensure API is stable.');
+      toast.error('Failed to generate bullets. Please ensure API is stable.');
     } finally {
       setIsGenerating(false);
     }

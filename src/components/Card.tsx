@@ -1,8 +1,9 @@
 import { Draggable } from '@hello-pangea/dnd';
-import { Building2, Calendar, Trash2 } from 'lucide-react';
+import { Building2, Calendar, Trash2, AlertCircle } from 'lucide-react';
 import DetailViewModal from './DetailViewModal';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { differenceInDays } from 'date-fns';
 
 interface CardProps {
   application: any;
@@ -15,6 +16,12 @@ export default function Card({ application, index, onDelete }: CardProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const { isDark } = useDarkMode();
   const dark = isDark;
+
+  const isOverdue = useMemo(() => {
+    if (application.status !== 'Applied') return false;
+    const days = differenceInDays(new Date(), new Date(application.dateApplied));
+    return days > 7;
+  }, [application]);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -40,7 +47,7 @@ export default function Card({ application, index, onDelete }: CardProps) {
               dark ? 'bg-slate-900/80 border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200 hover:shadow-md hover:border-blue-300'
             } ${
               snapshot.isDragging ? 'shadow-2xl ring-2 ring-brand-primary/50 rotate-2 z-50' : ''
-            }`}
+            } ${isOverdue ? 'ring-1 ring-rose-500/30 bg-rose-500/[0.02]' : ''}`}
             onMouseLeave={() => setIsConfirming(false)}
           >
             {/* Left color bar */}
@@ -48,6 +55,13 @@ export default function Card({ application, index, onDelete }: CardProps) {
               className="absolute left-0 top-0 bottom-0 w-1.5" 
               style={{ backgroundColor: application.color || '#cbd5e1' }}
             />
+
+            {isOverdue && (
+              <div className="absolute top-0 right-0 py-1 px-3 bg-rose-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl flex items-center gap-1 animate-pulse">
+                <AlertCircle className="w-2.5 h-2.5" />
+                Follow-up
+              </div>
+            )}
             
             <div className="mb-3 pl-2">
               <div className="flex items-start gap-2">
@@ -64,7 +78,11 @@ export default function Card({ application, index, onDelete }: CardProps) {
             </div>
             
             <div className={`flex items-center justify-between text-[10px] font-black uppercase tracking-widest mt-4 pt-4 border-t ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${dark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
+                isOverdue 
+                  ? 'bg-rose-500/10 text-rose-500' 
+                  : (dark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500')
+              }`}>
                 <Calendar className="w-3 h-3" />
                 <span>{new Date(application.dateApplied).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </div>
