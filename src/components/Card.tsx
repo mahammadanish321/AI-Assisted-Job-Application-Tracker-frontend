@@ -12,8 +12,20 @@ interface CardProps {
 
 export default function Card({ application, index, onDelete }: CardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const { isDark } = useDarkMode();
   const dark = isDark;
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isConfirming) {
+      setIsConfirming(true);
+      setTimeout(() => setIsConfirming(false), 3000);
+    } else {
+      onDelete();
+      setIsConfirming(false);
+    }
+  };
 
   return (
     <>
@@ -24,11 +36,12 @@ export default function Card({ application, index, onDelete }: CardProps) {
             {...provided.draggableProps}
             {...provided.dragHandleProps}
             onClick={() => setIsDetailOpen(true)}
-            className={`rounded-2xl p-5 shadow-sm border transition-all cursor-pointer relative overflow-hidden ${
+            className={`rounded-2xl p-5 shadow-sm border transition-all cursor-pointer relative overflow-hidden group ${
               dark ? 'bg-slate-900/80 border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200 hover:shadow-md hover:border-blue-300'
             } ${
               snapshot.isDragging ? 'shadow-2xl ring-2 ring-brand-primary/50 rotate-2 z-50' : ''
             }`}
+            onMouseLeave={() => setIsConfirming(false)}
           >
             {/* Left color bar */}
             <div 
@@ -57,16 +70,19 @@ export default function Card({ application, index, onDelete }: CardProps) {
               </div>
               
               <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm('Are you sure you want to delete this application?')) {
-                    onDelete();
-                  }
-                }}
-                className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500/10 text-rose-500 h-7 w-7 flex items-center justify-center`}
-                title="Delete application"
+                onClick={handleDelete}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all h-8 ${
+                  isConfirming 
+                    ? 'bg-rose-500 text-white opacity-100' 
+                    : `opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 text-rose-500`
+                }`}
+                title={isConfirming ? "Confirm Delete" : "Delete application"}
               >
-                <Trash2 className="w-4 h-4" />
+                {isConfirming ? (
+                   <span className="text-[9px] font-black tracking-tighter">Sure?</span>
+                ) : (
+                   <Trash2 className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
