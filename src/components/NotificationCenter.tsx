@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Check, Trash2, ExternalLink, X } from 'lucide-react';
+import { Bell, Check, Trash2, ExternalLink, X, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../api';
+import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification, syncGmailNotifications } from '../api';
+import toast from 'react-hot-toast';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -11,6 +12,7 @@ export default function NotificationCenter() {
   const { isDark } = useDarkMode();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -47,6 +49,39 @@ export default function NotificationCenter() {
       queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
     },
   });
+
+  const syncGmailMutation = useMutation({
+    mutationFn: async () => {
+      // Mocking OAuth token extraction as requested by assumption
+      const token = localStorage.getItem('google_access_token') || 'MOCK_USER_TOKEN';
+      return syncGmailNotifications(token);
+    },
+    onMutate: () => setIsSyncing(true),
+    onSettled: () => setIsSyncing(false),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
+      if (data && data.count > 0) {
+        toast.success(`Found ${data.count} new email updates!`);
+      } else {
+        toast.success('Gmail synced. No new updates.');
+      }
+    },
+    onError: () => toast.error('Failed to sync Gmail')
+  });
+
+  useEffect(() => {
+    // Polling every 5 minutes if document is visible/active
+    const handleSync = () => {
+      if (document.visibilityState === 'visible') {
+        const token = localStorage.getItem('google_access_token');
+        if (token && !isSyncing) syncGmailMutation.mutate();
+      }
+    };
+
+    const intervalId = setInterval(handleSync, 5 * 60 * 1000); // 5 mins
+    return () => clearInterval(intervalId);
+  }, [isSyncing]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -85,6 +120,14 @@ export default function NotificationCenter() {
           <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
             <h3 className="font-bold text-sm">Notifications</h3>
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => syncGmailMutation.mutate()} 
+                className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                disabled={isSyncing}
+                title="Sync Gmail"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
               {unreadCount > 0 && (
                 <button 
                   onClick={() => markAllReadMutation.mutate()}

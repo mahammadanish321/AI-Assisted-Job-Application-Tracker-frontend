@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   withCredentials: true,
 });
 
@@ -84,9 +84,14 @@ api.interceptors.response.use(
 );
 
 // Auth
-export const loginUser = async (credentials: any) => {
-  const { data } = await api.post('/auth/login', credentials);
-  return data;
+export const loginUser = async (data: any) => {
+  const response = await api.post('/auth/login', data);
+  return response.data;
+};
+
+export const googleAuth = async (googleAccessToken: string) => {
+  const response = await api.post('/auth/google', { googleAccessToken });
+  return response.data;
 };
 export const registerUser = async (userInfo: any) => {
   const { data } = await api.post('/auth/register', userInfo);
@@ -153,5 +158,10 @@ export const markAllAsRead = async () => {
 };
 export const deleteNotification = async (id: string) => {
   const { data } = await api.delete(`/notifications/${id}`);
+  return data;
+};
+
+export const syncGmailNotifications = async (googleAccessToken: string) => {
+  const { data } = await api.post('/notifications/sync-gmail', { googleAccessToken });
   return data;
 };

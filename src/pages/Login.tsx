@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { loginUser } from '../api';
+import { loginUser, googleAuth } from '../api';
 import logo from '../assets/apple-touch-icon.png';
+import { useGoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from 'react-icons/fc';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,6 +23,27 @@ export default function Login() {
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
+  });
+
+  const googleMutation = useMutation({
+    mutationFn: googleAuth,
+    onSuccess: (data) => {
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      toast.success(`Welcome back, ${data.name}!`);
+      navigate('/dashboard');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Google Auth failed.');
+    }
+  });
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      localStorage.setItem('google_access_token', tokenResponse.access_token);
+      googleMutation.mutate(tokenResponse.access_token);
+    },
+    onError: () => toast.error('Google Sign In was unsuccessful'),
+    scope: 'email profile https://www.googleapis.com/auth/gmail.readonly',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,6 +94,22 @@ export default function Login() {
           >
             {loginMutation.status === 'pending' && <Loader2 className="w-5 h-5 animate-spin" />}
             Sign In
+          </button>
+
+          <div className="relative flex items-center py-2">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-medium">Or</span>
+            <div className="flex-grow border-t border-slate-200"></div>
+          </div>
+
+          <button 
+            type="button" 
+            onClick={() => loginWithGoogle()}
+            disabled={googleMutation.status === 'pending'}
+            className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            {googleMutation.status === 'pending' ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : <FcGoogle className="w-5 h-5" />}
+            Continue with Google
           </button>
 
           <p className="text-center text-sm font-medium text-slate-500 pt-5 mt-5 border-t border-slate-100">
