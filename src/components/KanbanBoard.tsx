@@ -12,7 +12,8 @@ export default function KanbanBoard() {
   const queryClient = useQueryClient();
   const { isDark } = useDarkMode();
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [columns, setColumns] = useState<{ name: string; color: string }[]>([]);
+
   const { data: applications = [], isLoading: isAppsLoading, isFetching: isAppsFetching } = useQuery({
     queryKey: ['applications'],
     queryFn: getApplications,
@@ -25,53 +26,59 @@ export default function KanbanBoard() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const [localData, setLocalData] = useState<any[]>([]);
-  const [columns, setColumns] = useState<{ name: string; color: string }[]>([]);
-
-  useEffect(() => {
-    if (!isAppsFetching || applications.length > 0) {
-       setLocalData(applications);
-    }
-  }, [applications, isAppsFetching]);
-
   useEffect(() => {
     if (profile?.boardColumns) {
       setColumns(profile.boardColumns);
     }
   }, [profile]);
-  
-  // Statistics calculation
+
+  const validApps = useMemo(() => {
+     // Filter out any potential null/corrupt items
+     return applications.filter((app: any) => app && app._id && app.company);
+  }, [applications]);
+
+  // Statistics calculation based on valid apps that are actually in a visible column
   const stats = useMemo(() => {
-    const total = applications.length;
-    const byStatus = applications.reduce((acc: any, app: any) => {
+    const columnNames = columns.map(c => c.name);
+    const visibleApps = validApps.filter(app => columnNames.includes(app.status));
+    
+    const byStatus = visibleApps.reduce((acc: any, app: any) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
     }, {});
     
-    return { total, byStatus };
-  }, [applications]);
+    return { total: visibleApps.length, byStatus };
+  }, [validApps, columns]);
 
   const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return localData;
+    const columnNames = columns.map(c => c.name);
+    const visibleApps = validApps.filter(app => columnNames.includes(app.status));
+
+    if (!searchQuery.trim()) return visibleApps;
     const query = searchQuery.toLowerCase();
-    return localData.filter(app => 
+    return visibleApps.filter(app => 
       app.company.toLowerCase().includes(query) || 
       app.role.toLowerCase().includes(query) ||
       (app.notes && app.notes.toLowerCase().includes(query))
     );
-  }, [localData, searchQuery]);
+  }, [validApps, searchQuery, columns]);
 
   const updateAppMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateApplication(id, { status }),
-    onMutate: async () => {
+    onMutate: async (newData) => {
       await queryClient.cancelQueries({ queryKey: ['applications'] });
       const previousApps = queryClient.getQueryData(['applications']);
+      
+      // Optimistic update
+      queryClient.setQueryData(['applications'], (old: any) => {
+        return (old || []).map((app: any) => app._id === newData.id ? { ...app, status: newData.status } : app);
+      });
+      
       return { previousApps };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousApps) {
         queryClient.setQueryData(['applications'], context.previousApps);
-        setLocalData(context.previousApps as any[]);
       }
       toast.error('Sync failed. Reverting changes.');
     },
@@ -87,13 +94,11 @@ export default function KanbanBoard() {
       const previousApps = queryClient.getQueryData(['applications']);
       const newApps = (previousApps as any[]).filter(app => app._id !== id);
       queryClient.setQueryData(['applications'], newApps);
-      setLocalData(newApps);
       return { previousApps };
     },
     onError: (_err, _id, context) => {
       if (context?.previousApps) {
         queryClient.setQueryData(['applications'], context.previousApps);
-        setLocalData(context.previousApps as any[]);
       }
       toast.error('Failed to delete application.');
     },
@@ -125,34 +130,14 @@ export default function KanbanBoard() {
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-    const newLocalData = Array.from(localData);
-    const itemIndex = newLocalData.findIndex(app => app._id === draggableId);
-    if (itemIndex === -1) return;
-    
-    const movedItem = { ...newLocalData[itemIndex], status: destination.droppableId };
-    newLocalData.splice(itemIndex, 1);
-    
-    const destApps = newLocalData.filter(app => app.status === destination.droppableId);
-    
-    if (destApps.length === 0 || destination.index >= destApps.length) {
-      newLocalData.push(movedItem);
-    } else {
-      const itemAtTarget = destApps[destination.index];
-      const targetIndex = newLocalData.findIndex(app => app._id === itemAtTarget._id);
-      newLocalData.splice(targetIndex, 0, movedItem);
-    }
-    
-    setLocalData(newLocalData);
-    queryClient.setQueryData(['applications'], newLocalData);
-
     const newStatus = destination.droppableId;
     updateAppMutation.mutate({ id: draggableId, status: newStatus });
   };
 
   const handleExportCSV = () => {
-    if (applications.length === 0) return toast.error('No applications to export');
+    if (validApps.length === 0) return toast.error('No applications to export');
     const headers = ['Company', 'Role', 'Status', 'Date Applied', 'Salary', 'Notes'];
-    const rows = applications.map((app: any) => [
+    const rows = validApps.map((app: any) => [
       `"${app.company}"`,
       `"${app.role}"`,
       `"${app.status}"`,
@@ -182,7 +167,7 @@ export default function KanbanBoard() {
     if (columns.length <= 1) return toast.error('Board must have at least one stage');
     const stageToDelete = columns[index].name;
     const firstStage = columns[index === 0 ? 1 : 0].name;
-    const appsToMove = localData.filter(app => app.status === stageToDelete);
+    const appsToMove = validApps.filter(app => app.status === stageToDelete);
     try {
       if (appsToMove.length > 0) {
         toast.loading(`Moving items to ${firstStage}...`, { id: 'reassigning' });
@@ -203,10 +188,10 @@ export default function KanbanBoard() {
     const newCols = [...columns];
     const oldName = newCols[index].name;
     newCols[index] = { ...newCols[index], ...updates };
+    
     if (updates.name && updates.name !== oldName) {
-      const appsToUpdate = localData.filter(app => app.status === oldName);
+      const appsToUpdate = validApps.filter(app => app.status === oldName);
       appsToUpdate.forEach(app => updateAppMutation.mutate({ id: app._id, status: updates.name! }));
-      setLocalData(prev => prev.map(app => app.status === oldName ? { ...app, status: updates.name } : app));
     }
     syncBoard(newCols);
   };
