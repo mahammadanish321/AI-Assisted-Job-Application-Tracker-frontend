@@ -70,18 +70,8 @@ export default function NotificationCenter() {
     onError: () => toast.error('Failed to sync Gmail')
   });
 
-  useEffect(() => {
-    // Polling every 5 minutes if document is visible/active
-    const handleSync = () => {
-      if (document.visibilityState === 'visible') {
-        const token = localStorage.getItem('google_access_token');
-        if (token && !isSyncing) syncGmailMutation.mutate();
-      }
-    };
-
-    const intervalId = setInterval(handleSync, 5 * 60 * 1000); // 5 mins
-    return () => clearInterval(intervalId);
-  }, [isSyncing]);
+  // Automatic Gmail syncing has been removed as per user request.
+  // Syncing is now purely manual via the Refresh button in the UI.
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

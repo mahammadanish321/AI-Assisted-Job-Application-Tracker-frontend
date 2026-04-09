@@ -12,6 +12,7 @@ export default function AddApplicationModal() {
   const [jdText, setJdText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parsed, setParsed] = useState(false);
+  const [activeProvider, setActiveProvider] = useState<string>('');
   const queryClient = useQueryClient();
   const { data: profile } = useQuery({ 
     queryKey: ['profile'], 
@@ -42,8 +43,9 @@ export default function AddApplicationModal() {
       setValue('role', data.role || '');
       if (data.location) setValue('location', data.location);
       if (data.salaryRange) setValue('salaryRange', data.salaryRange);
+      setActiveProvider(data.provider || 'AI');
       setParsed(true);
-      toast.success('OpenAI extraction complete!');
+      toast.success(`${data.provider || 'AI'} extraction complete!`);
     } catch (err) {
       console.error(err);
       toast.error('AI failed to parse job description.');
@@ -100,7 +102,7 @@ export default function AddApplicationModal() {
                     Add Application
                   </h2>
                   <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Powered by OpenAI o3-mini
+                    Powered by {activeProvider || 'AI Provider'}
                   </p>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export default function AddApplicationModal() {
                       value={jdText}
                       onChange={(e) => setJdText(e.target.value)}
                       className={`${inputStyle} h-80 resize-none leading-relaxed overflow-y-auto`}
-                      placeholder="Paste the job description here. OpenAI will perform a deep extraction of the company, role, and requirements for you."
+                      placeholder={`Paste the job description here. ${activeProvider || 'AI'} will perform a deep extraction of the company, role, and requirements for you.`}
                     />
                   </div>
                   <button 
@@ -127,7 +129,7 @@ export default function AddApplicationModal() {
                     className="w-full group relative overflow-hidden bg-brand-primary hover:bg-brand-indigo disabled:bg-slate-800 disabled:text-slate-600 text-white font-black py-5 rounded-2xl transition-all flex justify-center items-center gap-3 shadow-2xl shadow-brand-primary/30"
                   >
                     {isParsing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Wand2 className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-                    {isParsing ? 'Analyzing with OpenAI...' : 'Magic Extract'}
+                    {isParsing ? `Analyzing with ${activeProvider || 'AI'}...` : 'Magic Extract'}
                   </button>
                 </div>
               ) : (
