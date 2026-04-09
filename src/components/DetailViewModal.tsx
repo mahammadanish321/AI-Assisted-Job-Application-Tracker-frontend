@@ -129,7 +129,7 @@ export default function DetailViewModal({ application, onClose }: DetailViewModa
                     <Sparkles className="w-5 h-5 text-brand-primary" />
                   </div>
                   <div>
-                    <h3 className={`text-lg font-black tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}>OpenAI Resume Co-pilot</h3>
+                    <h3 className={`text-lg font-black tracking-tight ${dark ? 'text-white' : 'text-slate-900'}`}>AI Resume Co-pilot</h3>
                     <p className={`text-xs font-medium ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Deep contextual generation tailored to your persona.</p>
                   </div>
                </div>
