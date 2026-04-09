@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+// Ensure the base URL always has the /api suffix if not provided
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) return 'http://localhost:5000/api';
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
+};
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: getBaseURL(),
   withCredentials: true,
 });
 
@@ -36,7 +43,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh') {
+    // Fixed path checks to be more robust
+    const isLoginOrRefresh = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginOrRefresh) {
       
       if (isRefreshing) {
         try {
@@ -93,12 +103,14 @@ export const googleAuth = async (googleAccessToken: string) => {
   const response = await api.post('/auth/google', { googleAccessToken });
   return response.data;
 };
+
 export const registerUser = async (userInfo: any) => {
   const { data } = await api.post('/auth/register', userInfo);
   return data;
 };
 
-// Applications
+// ... existing application and profile functions stay the same, 
+// but will now use the corrected baseURL correctly ...
 export const getApplications = async () => {
   const { data } = await api.get('/applications');
   return data;
