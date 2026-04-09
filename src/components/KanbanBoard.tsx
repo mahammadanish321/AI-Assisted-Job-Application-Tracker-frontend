@@ -160,7 +160,7 @@ export default function KanbanBoard() {
       `"${app.salaryRange || ''}"`,
       `"${(app.notes || '').replace(/"/g, '""')}"`
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + "\n" + rows.map(e => e.join(",")).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + "\n" + rows.map((e: any[]) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
