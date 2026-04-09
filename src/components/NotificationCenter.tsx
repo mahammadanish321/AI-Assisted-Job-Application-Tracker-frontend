@@ -52,40 +52,67 @@ export default function NotificationCenter() {
     },
   });
 
+  const [isManualSync, setIsManualSync] = useState(false);
+  const [countdown, setCountdown] = useState(300);
+  const hasGoogleToken = !!localStorage.getItem('google_access_token');
+
   const syncGmailMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (isManual: boolean = false) => {
+      setIsManualSync(isManual);
       const token = localStorage.getItem('google_access_token');
-      if (!token) {
-        throw new Error('AUTH_REQUIRED');
-      }
+      if (!token) throw new Error('AUTH_REQUIRED');
       return syncGmailNotifications(token);
     },
     onMutate: () => setIsSyncing(true),
-    onSettled: () => setIsSyncing(false),
+    onSettled: () => {
+      setIsSyncing(false);
+      setIsManualSync(false);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
+      setCountdown(300); // Reset countdown on success
+      
       if (data && data.count > 0) {
         toast.success(`Found ${data.count} new job updates from your Gmail!`, { icon: '📧' });
-      } else {
+      } else if (isManualSync) {
         toast.success('Gmail sync complete. No new updates found.');
       }
     },
     onError: (err: any) => {
       if (err.message === 'AUTH_REQUIRED') {
-        toast.error('Google Access Token not found. Please sync via Google.');
+        if (isManualSync) toast.error('Google Access Token not found. Please sync via Google.');
       } else {
         console.error('Sync error:', err);
-        toast.error('Failed to sync Gmail. Please check your connection.');
+        if (isManualSync) toast.error('Failed to sync Gmail. Please check your connection.');
       }
+      setCountdown(300); // Reset timer anyway
     }
   });
-  
+
+  // Countdown and Auto-Sync Logic
+  useEffect(() => {
+    let timer: any;
+    if (hasGoogleToken && !isSyncing) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            syncGmailMutation.mutate(false); // Auto sync
+            return 300;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [hasGoogleToken, isSyncing]);
+
   const googleMutation = useMutation({
     mutationFn: googleAuth,
     onSuccess: (data) => {
       localStorage.setItem('userInfo', JSON.stringify(data));
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      setCountdown(300); // Start timer after link
       toast.success('Gmail sync enabled! Refresh to scan.');
     },
     onError: () => toast.error('Google link failed.')
@@ -100,11 +127,6 @@ export default function NotificationCenter() {
     scope: 'email profile https://www.googleapis.com/auth/gmail.readonly',
   });
 
-  const hasGoogleToken = !!localStorage.getItem('google_access_token');
-
-  // Automatic Gmail syncing has been removed as per user request.
-  // Syncing is now purely manual via the Refresh button in the UI.
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -114,6 +136,12 @@ export default function NotificationCenter() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const unreadCount = unreadData?.count || 0;
 
@@ -143,14 +171,24 @@ export default function NotificationCenter() {
             <h3 className="font-bold text-sm">Notifications</h3>
             <div className="flex items-center gap-2">
               {hasGoogleToken && (
-                <button 
-                  onClick={() => syncGmailMutation.mutate()} 
-                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  disabled={isSyncing}
-                  title="Sync Gmail"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2 mr-1">
+                  <span 
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                      isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
+                    }`}
+                    title="Auto-sync countdown"
+                  >
+                    {isSyncing ? 'Syncing...' : formatCountdown(countdown)}
+                  </span>
+                  <button 
+                    onClick={() => syncGmailMutation.mutate(true)} 
+                    className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    disabled={isSyncing}
+                    title="Manual Sync (Resets Timer)"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
               )}
               {unreadCount > 0 && (
                 <button 
