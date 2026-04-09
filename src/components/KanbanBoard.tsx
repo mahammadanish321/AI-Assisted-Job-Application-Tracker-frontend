@@ -34,13 +34,13 @@ export default function KanbanBoard() {
 
   const validApps = useMemo(() => {
      // Filter out any potential null/corrupt items
-     return applications.filter((app: any) => app && app._id && app.company);
+     return (applications as any[]).filter((app: any) => app && app._id && app.company);
   }, [applications]);
 
   // Statistics calculation based on valid apps that are actually in a visible column
   const stats = useMemo(() => {
     const columnNames = columns.map(c => c.name);
-    const visibleApps = validApps.filter(app => columnNames.includes(app.status));
+    const visibleApps = validApps.filter((app: any) => columnNames.includes(app.status));
     
     const byStatus = visibleApps.reduce((acc: Record<string, number>, app: any) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
@@ -52,11 +52,11 @@ export default function KanbanBoard() {
 
   const filteredData = useMemo(() => {
     const columnNames = columns.map(c => c.name);
-    const visibleApps = validApps.filter(app => columnNames.includes(app.status));
+    const visibleApps = validApps.filter((app: any) => columnNames.includes(app.status));
 
     if (!searchQuery.trim()) return visibleApps;
     const query = searchQuery.toLowerCase();
-    return visibleApps.filter(app => 
+    return visibleApps.filter((app: any) => 
       app.company.toLowerCase().includes(query) || 
       app.role.toLowerCase().includes(query) ||
       (app.notes && app.notes.toLowerCase().includes(query))
@@ -92,7 +92,7 @@ export default function KanbanBoard() {
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey: ['applications'] });
       const previousApps = queryClient.getQueryData(['applications']);
-      const newApps = (previousApps as any[]).filter(app => app._id !== id);
+      const newApps = (previousApps as any[]).filter((app: any) => app._id !== id);
       queryClient.setQueryData(['applications'], newApps);
       return { previousApps };
     },
@@ -167,7 +167,7 @@ export default function KanbanBoard() {
     if (columns.length <= 1) return toast.error('Board must have at least one stage');
     const stageToDelete = columns[index].name;
     const firstStage = columns[index === 0 ? 1 : 0].name;
-    const appsToMove = validApps.filter(app => app.status === stageToDelete);
+    const appsToMove = validApps.filter((app: any) => app.status === stageToDelete);
     try {
       if (appsToMove.length > 0) {
         toast.loading(`Moving items to ${firstStage}...`, { id: 'reassigning' });
@@ -190,8 +190,8 @@ export default function KanbanBoard() {
     newCols[index] = { ...newCols[index], ...updates };
     
     if (updates.name && updates.name !== oldName) {
-      const appsToUpdate = validApps.filter(app => app.status === oldName);
-      appsToUpdate.forEach(app => updateAppMutation.mutate({ id: app._id, status: updates.name! }));
+      const appsToUpdate = validApps.filter((app: any) => app.status === oldName);
+      appsToUpdate.forEach((app: any) => updateAppMutation.mutate({ id: app._id, status: updates.name! }));
     }
     syncBoard(newCols);
   };
@@ -199,7 +199,7 @@ export default function KanbanBoard() {
   const columnsWithData = useMemo(() => {
     return columns.map(col => ({
       ...col,
-      apps: filteredData.filter(app => app.status === col.name)
+      apps: filteredData.filter((app: any) => app.status === col.name)
     }));
   }, [columns, filteredData]);
 
