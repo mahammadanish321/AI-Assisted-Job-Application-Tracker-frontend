@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApplications, updateApplication, getProfile, updateProfile, deleteApplication } from '../api';
 import Column from './Column';
 import AddApplicationModal from './AddApplicationModal';
-import { Loader2, Search, Download, BarChart3, FilterX } from 'lucide-react';
+import { Loader2, Search, Download, BarChart3, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import toast from 'react-hot-toast';
 
@@ -218,6 +218,19 @@ export default function KanbanBoard() {
     }));
   }, [columns, filteredData]);
 
+  // Ref and state for scroll
+  const [scrollNode, setScrollNode] = useState<HTMLDivElement | null>(null);
+
+  const scrollBoard = (direction: 'left' | 'right') => {
+    if (scrollNode) {
+      const scrollAmount = 400;
+      scrollNode.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   if ((isAppsLoading && applications.length === 0) || (isProfileLoading && !profile)) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -291,11 +304,35 @@ export default function KanbanBoard() {
           </button>
           
           <AddApplicationModal />
+
+          <div className="flex items-center gap-1 border-l pl-3 ml-1 border-slate-200 dark:border-slate-800">
+            <button 
+              onClick={() => scrollBoard('left')}
+              className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
+                dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+              }`}
+              title="Scroll Left"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => scrollBoard('right')}
+              className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
+                dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+              }`}
+              title="Scroll Right"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
       
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="status-board-container flex gap-8 h-full items-start overflow-x-auto pb-12 scrollbar-hide">
+        <div 
+          ref={(node) => setScrollNode(node)}
+          className="status-board-container flex gap-8 h-full items-start overflow-x-auto pb-12 scroll-smooth"
+        >
           {columnsWithData.map((col, idx) => (
             <Column 
               key={`${col.name}-${idx}`} 

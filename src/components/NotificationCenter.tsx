@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check, Trash2, ExternalLink, X, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification, syncGmailNotifications } from '../api';
+import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification, syncGmailNotifications, googleAuth } from '../api';
 import toast from 'react-hot-toast';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { formatDistanceToNow } from 'date-fns';
+import { useGoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from 'react-icons/fc';
 
 export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,8 +54,10 @@ export default function NotificationCenter() {
 
   const syncGmailMutation = useMutation({
     mutationFn: async () => {
-      // Mocking OAuth token extraction as requested by assumption
-      const token = localStorage.getItem('google_access_token') || 'MOCK_USER_TOKEN';
+      const token = localStorage.getItem('google_access_token');
+      if (!token) {
+        throw new Error('AUTH_REQUIRED');
+      }
       return syncGmailNotifications(token);
     },
     onMutate: () => setIsSyncing(true),
@@ -62,13 +66,41 @@ export default function NotificationCenter() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
       if (data && data.count > 0) {
-        toast.success(`Found ${data.count} new email updates!`);
+        toast.success(`Found ${data.count} new job updates from your Gmail!`, { icon: '📧' });
       } else {
-        toast.success('Gmail synced. No new updates.');
+        toast.success('Gmail sync complete. No new updates found.');
       }
     },
-    onError: () => toast.error('Failed to sync Gmail')
+    onError: (err: any) => {
+      if (err.message === 'AUTH_REQUIRED') {
+        toast.error('Google Access Token not found. Please sync via Google.');
+      } else {
+        console.error('Sync error:', err);
+        toast.error('Failed to sync Gmail. Please check your connection.');
+      }
+    }
   });
+  
+  const googleMutation = useMutation({
+    mutationFn: googleAuth,
+    onSuccess: (data) => {
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.success('Gmail sync enabled! Refresh to scan.');
+    },
+    onError: () => toast.error('Google link failed.')
+  });
+  
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      localStorage.setItem('google_access_token', tokenResponse.access_token);
+      googleMutation.mutate(tokenResponse.access_token);
+    },
+    onError: () => toast.error('Google Sign In was unsuccessful'),
+    scope: 'email profile https://www.googleapis.com/auth/gmail.readonly',
+  });
+
+  const hasGoogleToken = !!localStorage.getItem('google_access_token');
 
   // Automatic Gmail syncing has been removed as per user request.
   // Syncing is now purely manual via the Refresh button in the UI.
@@ -110,14 +142,16 @@ export default function NotificationCenter() {
           <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
             <h3 className="font-bold text-sm">Notifications</h3>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => syncGmailMutation.mutate()} 
-                className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                disabled={isSyncing}
-                title="Sync Gmail"
-              >
-                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              </button>
+              {hasGoogleToken && (
+                <button 
+                  onClick={() => syncGmailMutation.mutate()} 
+                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  disabled={isSyncing}
+                  title="Sync Gmail"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                </button>
+              )}
               {unreadCount > 0 && (
                 <button 
                   onClick={() => markAllReadMutation.mutate()}
@@ -131,6 +165,25 @@ export default function NotificationCenter() {
               </button>
             </div>
           </div>
+
+          {!hasGoogleToken && (
+            <div className={`p-5 m-3 rounded-2xl border flex flex-col items-center text-center gap-3 animate-pulse-subtle ${isDark ? 'bg-blue-500/5 border-blue-500/20' : 'bg-blue-50 border-blue-100'}`}>
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                 <FcGoogle className="w-6 h-6" />
+              </div>
+              <div>
+                <p className={`text-xs font-bold leading-relaxed mb-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>To use Gmail Sync features, please login with Google.</p>
+                <p className={`text-[10px] leading-relaxed opacity-60 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Soon will scan your unread recruitment emails for you.</p>
+              </div>
+              <button 
+                onClick={() => loginWithGoogle()}
+                className="w-full bg-white dark:bg-slate-800 py-2.5 rounded-xl text-xs font-black shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+              >
+                <FcGoogle className="w-4 h-4" />
+                Connect Gmail
+              </button>
+            </div>
+          )}
 
           <div className="max-h-[400px] overflow-y-auto">
             {notifications.length === 0 ? (

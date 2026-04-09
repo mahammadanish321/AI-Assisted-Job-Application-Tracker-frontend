@@ -111,6 +111,10 @@ export default function Login() {
             {googleMutation.status === 'pending' ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : <FcGoogle className="w-5 h-5" />}
             Continue with Google
           </button>
+          
+          <p className="text-[10px] text-center text-slate-400 mt-2 italic leading-relaxed px-4">
+            Disclaimer: By logging in with Google, Soon will be able to access your Gmail notifications to automatically track and organize your job application updates for a better experience!
+          </p>
 
           <p className="text-center text-sm font-medium text-slate-500 pt-5 mt-5 border-t border-slate-100">
             Don't have an account? <Link to="/signup" className="text-blue-600 hover:text-blue-800 hover:underline font-bold">Create one</Link>
