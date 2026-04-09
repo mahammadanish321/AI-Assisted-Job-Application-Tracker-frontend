@@ -14,7 +14,7 @@ export default function KanbanBoard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [columns, setColumns] = useState<{ name: string; color: string }[]>([]);
 
-  const { data: applications = [], isLoading: isAppsLoading, isFetching: isAppsFetching } = useQuery({
+  const { data: applications = [], isLoading: isAppsLoading } = useQuery({
     queryKey: ['applications'],
     queryFn: getApplications,
     staleTime: 1000 * 60,
@@ -42,7 +42,7 @@ export default function KanbanBoard() {
     const columnNames = columns.map(c => c.name);
     const visibleApps = validApps.filter(app => columnNames.includes(app.status));
     
-    const byStatus = visibleApps.reduce((acc: any, app: any) => {
+    const byStatus = visibleApps.reduce((acc: Record<string, number>, app: any) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
     }, {});
@@ -250,7 +250,7 @@ export default function KanbanBoard() {
                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total</span>
                <span className={`text-sm font-black ${dark ? 'text-white' : 'text-slate-900'}`}>{stats.total}</span>
              </div>
-             {columns.slice(0, 3).map(col => (
+             {columns.map(col => (
                <div key={col.name} className="flex flex-col">
                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate max-w-[60px]">{col.name}</span>
                  <span className="text-sm font-black" style={{ color: col.color }}>{stats.byStatus[col.name] || 0}</span>
