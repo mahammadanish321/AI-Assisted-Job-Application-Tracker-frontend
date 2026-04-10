@@ -97,8 +97,8 @@ const Footer = memo(({ isDark }: { isDark: boolean }) => (
       </div>
       <p className="text-xs font-medium">Built for the next generation of talent · Powered by OpenAI</p>
       <div className="flex gap-6 text-xs font-bold uppercase tracking-widest">
-        <a href="#" className="hover:text-brand-primary transition-colors">Privacy</a>
-        <a href="#" className="hover:text-brand-primary transition-colors">Terms</a>
+        <Link to="/privacy-policy" className="hover:text-brand-primary transition-colors">Privacy</Link>
+        <Link to="/terms" className="hover:text-brand-primary transition-colors">Terms</Link>
       </div>
     </div>
   </footer>

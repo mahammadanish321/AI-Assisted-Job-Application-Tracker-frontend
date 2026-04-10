@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import GetStarted from './pages/GetStarted';
 import Profile from './pages/Profile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Toaster } from 'react-hot-toast';
 
@@ -36,6 +38,8 @@ function App() {
         <Route path="/" element={<GetStarted />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
 
         {/* Protected pages */}
         <Route path="/dashboard" element={
