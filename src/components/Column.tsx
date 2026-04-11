@@ -55,10 +55,10 @@ export default function Column({ id, title, applications, color, index, onAddBef
   const accentColor = color || '#6366f1';
 
   return (
-    <div className={`flex flex-col rounded-[32px] w-[340px] min-w-[340px] shrink-0 transition-all border group/col overflow-visible ${dark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200 shadow-sm'}`}>
+    <div className={`flex flex-col rounded-[24px] w-[310px] min-w-[310px] shrink-0 transition-all border group/col overflow-visible ${dark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200 shadow-sm'}`}>
       
       {/* Header */}
-      <div className="p-6 pb-2 relative">
+      <div className="p-4 pb-1 relative">
         <div className="flex items-center justify-between mb-4">
           {/* LEFT: Plus Icon (Add Before) - Only show if not the first stage */}
           <div className="w-8 h-8 flex items-center justify-center">

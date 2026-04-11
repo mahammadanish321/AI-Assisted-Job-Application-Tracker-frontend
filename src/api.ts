@@ -131,6 +131,10 @@ export const parseJobDescription = async (jdText: string) => {
   const { data } = await api.post('/applications/parse', { jdText });
   return data;
 };
+export const generateStrategicSummary = async (jdText: string) => {
+  const { data } = await api.post('/applications/summarize', { jdText });
+  return data;
+};
 
 // Profile
 export const getProfile = async () => {

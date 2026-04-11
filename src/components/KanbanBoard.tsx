@@ -227,47 +227,47 @@ export default function KanbanBoard() {
   const dark = isDark;
 
   return (
-    <div className="flex flex-col h-full bg-transparent">
+    <div className="flex flex-col h-full bg-transparent max-h-none sm:max-h-[calc(100vh-120px)]">
       {/* Header */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-10 gap-6">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 sm:mb-8 gap-6">
         <div>
-          <h2 className={`text-4xl font-black tracking-tighter flex items-center gap-3 ${dark ? 'text-white' : 'text-slate-900'}`}>
+          <h2 className={`text-3xl font-black tracking-tighter flex items-center gap-3 ${dark ? 'text-white' : 'text-slate-900'}`}>
             Status Board
           </h2>
-          <p className="text-slate-500 font-medium text-sm mt-1">Refining your application lifecycle through customization.</p>
+          <p className="text-slate-500 font-medium text-xs mt-0.5">Refining your application lifecycle through customization.</p>
         </div>
         
         {/* Stats Section */}
-        <div className={`flex flex-wrap items-center gap-4 p-4 rounded-2xl border shadow-sm transition-all ${
-          dark ? 'bg-slate-800/40 border-slate-700' : 'bg-white border-slate-200'
+        <div className={`flex flex-nowrap items-center gap-3 sm:gap-4 p-3 rounded-2xl border shadow-sm transition-all backdrop-blur-sm xl:w-auto overflow-hidden ${
+          dark ? 'bg-slate-800/40 border-slate-700' : 'bg-white/80 border-slate-200'
         }`}>
            <div className={`flex items-center gap-2 px-3 border-r last:border-0 ${dark ? 'border-slate-700' : 'border-slate-100'}`}>
-             <BarChart3 className="w-4 h-4 text-brand-primary" />
-             <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Insights</span>
+             <BarChart3 className="w-4 h-4 text-blue-500" />
+             <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Metrics</span>
            </div>
-           <div className="flex flex-wrap gap-5">
-             <div className="flex flex-col">
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total</span>
-               <span className={`text-sm font-black ${dark ? 'text-white' : 'text-slate-900'}`}>{stats.total}</span>
+           <div className="flex items-center gap-4 sm:gap-5 pr-2 no-scrollbar">
+             <div className="flex flex-col shrink-0">
+               <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Total Tasks</span>
+               <span className={`text-xs font-black ${dark ? 'text-white' : 'text-slate-900'}`}>{stats.total}</span>
              </div>
              {columns.map(col => (
-               <div key={col.name} className="flex flex-col">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter truncate max-w-[60px]">{col.name}</span>
-                 <span className="text-sm font-black" style={{ color: col.color }}>{stats.byStatus[col.name] || 0}</span>
+               <div key={col.name} className="flex flex-col shrink-0">
+                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter truncate max-w-[60px]">{col.name}</span>
+                 <span className="text-xs font-black" style={{ color: col.color }}>{stats.byStatus[col.name] || 0}</span>
                </div>
              ))}
            </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-          <div className="relative flex-1 xl:w-64 min-w-[200px]">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text"
-              placeholder="Search applications..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-11 pr-4 py-3 border rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all duration-200 ${
+              className={`w-full pl-11 pr-12 py-3 border rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all duration-200 ${
                 dark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400'
               }`}
             />
@@ -278,37 +278,41 @@ export default function KanbanBoard() {
             )}
           </div>
           
-          <button 
-            onClick={handleExportCSV}
-            className={`group flex items-center gap-2 font-bold py-3 px-6 rounded-2xl border shadow-sm transition-all active:scale-95 text-sm ${
-              dark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-            Export
-          </button>
-          
-          <AddApplicationModal />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button 
+              onClick={handleExportCSV}
+              className={`flex-1 sm:flex-none group flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-2xl border shadow-sm transition-all active:scale-95 text-sm ${
+                dark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            
+            <div className="flex-1 sm:flex-none">
+              <AddApplicationModal />
+            </div>
 
-          <div className="flex items-center gap-1 border-l pl-3 ml-1 border-slate-200 dark:border-slate-800">
-            <button 
-              onClick={() => scrollBoard('left')}
-              className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
-                dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-              title="Scroll Left"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => scrollBoard('right')}
-              className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
-                dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
-              }`}
-              title="Scroll Right"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1 border-l pl-2 ml-1 border-slate-200 dark:border-slate-800">
+              <button 
+                onClick={() => scrollBoard('left')}
+                className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
+                  dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                }`}
+                title="Scroll Left"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => scrollBoard('right')}
+                className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-90 ${
+                  dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'
+                }`}
+                title="Scroll Right"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -316,7 +320,7 @@ export default function KanbanBoard() {
       <DragDropContext onDragEnd={onDragEnd}>
         <div 
           ref={(node) => setScrollNode(node)}
-          className="status-board-container flex gap-8 h-full items-start overflow-x-auto pb-12 scroll-smooth"
+          className="status-board-container flex gap-6 h-full items-start overflow-x-auto pb-10 scroll-smooth"
         >
           {columnsWithData.map((col, idx) => (
             <Column 

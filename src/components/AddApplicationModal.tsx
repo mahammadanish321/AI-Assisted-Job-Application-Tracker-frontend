@@ -86,9 +86,9 @@ export default function AddApplicationModal() {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300" onClick={handleClose}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md sm:p-4 animate-in fade-in duration-300" onClick={handleClose}>
           <div 
-            className={`rounded-[32px] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden border ${dark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'}`}
+            className={`shadow-2xl w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] flex flex-col relative overflow-hidden border rounded-none sm:rounded-[32px] ${dark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -139,7 +139,7 @@ export default function AddApplicationModal() {
                     Extraction Successful
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="group">
                       <label className={labelStyle}>Company</label>
                       <div className="relative">
@@ -156,7 +156,7 @@ export default function AddApplicationModal() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className={labelStyle}>Placement stage</label>
                       <select {...register('status')} className={inputStyle}>
@@ -168,16 +168,28 @@ export default function AddApplicationModal() {
                     <div>
                       <label className={`${labelStyle} flex items-center justify-between`}>
                         Accent Color
-                        <div className="w-4 h-4 rounded-full ring-2 ring-offset-2 ring-offset-transparent" style={{ backgroundColor: selectedColor, borderColor: 'white' }} />
                       </label>
-                      <div className={`flex items-center gap-3 border rounded-2xl px-4 py-3 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-                         <Palette className="w-4 h-4 text-slate-500" />
-                         <input type="color" {...register('color')} defaultValue="#6366f1" className="w-full h-8 border-none bg-transparent cursor-pointer rounded-lg" />
+                      <div className="grid grid-cols-5 gap-2 mt-2">
+                        {[
+                          { name: 'Indigo', value: '#6366f1' },
+                          { name: 'Rose', value: '#f43f5e' },
+                          { name: 'Amber', value: '#f59e0b' },
+                          { name: 'Emerald', value: '#10b981' },
+                          { name: 'Sky', value: '#0ea5e9' },
+                        ].map((col) => (
+                          <button
+                            key={col.value}
+                            type="button"
+                            onClick={() => setValue('color', col.value)}
+                            className={`w-full aspect-square rounded-lg transition-transform hover:scale-110 active:scale-95 border-2 ${selectedColor === col.value ? (dark ? 'border-white' : 'border-slate-900') : 'border-transparent'}`}
+                            style={{ backgroundColor: col.value }}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className={labelStyle}>Salary Expectations</label>
                       <input {...register('salaryRange')} className={inputStyle} placeholder="e.g. $120k - $150k" />
@@ -188,9 +200,20 @@ export default function AddApplicationModal() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className={labelStyle}>Tech Stack</label>
+                      <input {...register('techStack')} className={inputStyle} placeholder="React, Node, etc." />
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Deadline</label>
+                      <input type="date" {...register('deadline')} className={inputStyle} />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className={labelStyle}>Strategic Notes</label>
-                    <textarea {...register('notes')} className={`${inputStyle} h-28 resize-none leading-relaxed pt-4`} placeholder="Any specific context or research about this company..." />
+                    <label className={labelStyle}>Initial Notes</label>
+                    <textarea {...register('notes')} className={`${inputStyle} h-28 resize-none leading-relaxed pt-4`} placeholder="Any initial research or context..." />
                   </div>
                   
                   <div className="pt-6 flex gap-4 border-t border-slate-200 dark:border-slate-800">

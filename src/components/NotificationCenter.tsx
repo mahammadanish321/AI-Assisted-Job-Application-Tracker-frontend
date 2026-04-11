@@ -263,14 +263,27 @@ export default function NotificationCenter() {
                               </button>
                             )}
                             {notification.link && (
-                              <Link 
-                                to={notification.link}
-                                onClick={() => setIsOpen(false)}
-                                className="p-1.5 rounded-lg hover:bg-slate-500/10 text-slate-400 transition-colors"
-                                title="View details"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </Link>
+                              notification.link.startsWith('http') || notification.link.startsWith('mailto:') ? (
+                                <a 
+                                  href={notification.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setIsOpen(false)}
+                                  className="p-1.5 rounded-lg hover:bg-slate-500/10 text-slate-400 transition-colors"
+                                  title="Open mail / link"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              ) : (
+                                <Link 
+                                  to={notification.link}
+                                  onClick={() => setIsOpen(false)}
+                                  className="p-1.5 rounded-lg hover:bg-slate-500/10 text-slate-400 transition-colors"
+                                  title="View details"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </Link>
+                              )
                             )}
                             <button 
                               onClick={() => deleteMutation.mutate(notification._id)}
