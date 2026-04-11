@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Building2, Calendar, Check, Copy, Wand2, Loader2, Sparkles, MapPin, Code2, Globe, Save, Upload, Link2, Ghost, Palette } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useMutation, useQueryClient } from '@tanstack/react-query';

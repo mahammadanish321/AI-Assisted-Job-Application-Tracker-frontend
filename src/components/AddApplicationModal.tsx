@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createApplication, parseJobDescription, getProfile } from '../api';
-import { Loader2, Plus, Sparkles, X, Palette, Wand2, CheckCircle2, ChevronRight, Briefcase, Building } from 'lucide-react';
+import { Loader2, Plus, Sparkles, X, Wand2, CheckCircle2, ChevronRight, Briefcase, Building } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import toast from 'react-hot-toast';
 
